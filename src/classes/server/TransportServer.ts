@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { Transport } from '../../interfaces/rpc';
+import { Mode, Transport } from '../../interfaces/rpc';
 
 export class TransportServer implements Transport {
   private emitter: EventEmitter;
@@ -15,14 +15,14 @@ export class TransportServer implements Transport {
   public onData(callback: (data: string) => any): void {
     this.emitter.on(this.inTopic, async (reqData: string) => {
       const respData = await callback(reqData);
-      if (!respData || JSON.parse(reqData).method == "notify") return;
+      if (!respData || JSON.parse(reqData).mode == Mode.Notify) return;
       
       this.emitter.emit(this.outTopic, respData);
     });
   }
 
   public send(data: string): Promise<void> {
-    return new Promise((res, rej) => {
+    return new Promise((_res, _rej) => {
       this.emitter.emit(this.outTopic, data);
     })
   }

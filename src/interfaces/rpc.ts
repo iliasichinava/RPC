@@ -1,6 +1,7 @@
 export enum Mode { Request, Notify, Ping }
 
 export interface JSONRPCRequest {
+    mode: Mode,
     jsonrpc: string;
     method: string;
     params?: any[];

@@ -1,4 +1,4 @@
-import { JSONRPCRequest, JSONRPCHandler, Transport } from "../../interfaces/rpc";
+import { JSONRPCRequest, JSONRPCHandler, Transport, Mode } from "../../interfaces/rpc";
 import { Invoker } from "./commands";
 
 export class RPCServer {
@@ -40,7 +40,7 @@ export class RPCServer {
 
   private async handleRequest(transport: Transport, request: JSONRPCRequest): Promise<void> {
     const response = await this.invoker.invoke(request);
-    if(request.method !== "notify") await transport.send(JSON.stringify(response));
+    if(request.mode !== Mode.Notify) await transport.send(JSON.stringify(response));
   }
 
   private registerPingMethod() {

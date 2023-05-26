@@ -1,4 +1,4 @@
-import { JSONRPCRequest, JSONRPCResponse, Transport } from "../../interfaces/rpc";
+import { JSONRPCRequest, JSONRPCResponse, Mode, Transport } from "../../interfaces/rpc";
 
 export class RPCClient {
   private transport: Transport;
@@ -10,6 +10,7 @@ export class RPCClient {
   public async call(method: string, params?: any[]): Promise<any> {
     const request: JSONRPCRequest = {
       jsonrpc: "2.0",
+      mode: Mode.Request,
       method,
       params,
       id: this.generateRequestId(),
@@ -22,6 +23,7 @@ export class RPCClient {
   public async notify(method: string, params?: any[]): Promise<void> {
     const request: JSONRPCRequest = {
       jsonrpc: "2.0",
+      mode: Mode.Notify,
       method,
       params,
     };
@@ -32,6 +34,7 @@ export class RPCClient {
   public async ping(): Promise<boolean> {
     const request: JSONRPCRequest = {
       jsonrpc: "2.0",
+      mode: Mode.Ping,
       method: "__ping__",
       id: "__ping__"
     };
