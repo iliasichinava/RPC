@@ -22,5 +22,9 @@ export class TransportClient implements Transport {
       resolve();
     });
   }
+
+  public delete() {
+    this.emitter.removeAllListeners();
+  }
 }
   

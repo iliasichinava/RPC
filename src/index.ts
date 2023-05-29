@@ -14,53 +14,69 @@ async function main() {
   const handler: JSONRPCHandler = {
     greet: async () => {
       console.log("-------------------------------------");
-      console.log("oee");
+      console.log("nice");
       return "hello";
+    },
+
+    bye: async () => {
+      console.log("Bye");
     }
   }
   
   server.registerMethod("greet", handler);
 
+  let tr1 = new TransportServer({ emitter, inTopic: 'fromClient2', outTopic: 'toClient2' });
+
+  server.addTransport(tr1);
+
   server.run();
 
   /* Test 1 */
-  let connected = await clients.simpleClient.ping();
+  let connected = await clients.client2.ping();
   if (connected) {
-    const response = await clients.simpleClient.call("greet");
-    console.log(response)
+    const response1 = await clients.client2.call("greet");
+    console.log("First: " + response1);
   } else {
     console.log("Not connected");
   }
 
+  const response2 = await clients.client2.call("greet");
+  console.log(response2);
 }
 
 async function prepareServer(emitter: EventEmitter) {
-  return new RPCServer(
+  const server = new RPCServer(
     [
       new TransportServer({
         emitter,
         inTopic: 'fromClient1',
         outTopic: 'toClient1',
       })
-      // new TransportServer({
-      //   emitter,
-      //   inTopic: 'fromClient2',
-      //   outTopic: 'toClient2',
-      // })
     ]
   );
+
+  return server;
 }
 
 async function prepareClients(emitter: EventEmitter) {
-  const transportClient = new TransportClient({
+  const tc1 = new TransportClient({
     emitter,
     inTopic: 'toClient1',
     outTopic: 'fromClient1',
   });
 
-  const simpleClient = new RPCClient(transportClient);
+  const tc2 = new TransportClient({
+    emitter,
+    inTopic: 'toClient2',
+    outTopic: 'fromClient2',
+  });
 
-  return { simpleClient };
+  const client1 = new RPCClient(tc1);
+  const client2 = new RPCClient(tc2);  
+
+  client2.delete(tc2);
+
+  return { client1, client2 };
 }
 
 main()

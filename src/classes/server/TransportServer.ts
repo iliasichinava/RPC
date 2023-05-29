@@ -27,4 +27,8 @@ export class TransportServer implements Transport {
     })
   }
 
+  public delete() {
+    this.emitter.removeAllListeners();
+  }
+
 }
