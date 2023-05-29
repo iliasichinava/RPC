@@ -11,26 +11,30 @@ async function main() {
   const server = await prepareServer(emitter);
   const clients = await prepareClients(emitter);
 
+  /* Create and Run some test handlers */
+
   const handler: JSONRPCHandler = {
     greet: async () => {
       console.log("-------------------------------------");
-      console.log("nice");
-      return "hello";
+      console.log("Hello");
+      return "Handler ended";
     },
 
     bye: async () => {
+      console.log("-------------------------------------");
       console.log("Bye");
+      return "Handler ended"
     }
   }
   
   server.registerMethod("greet", handler);
+  server.registerMethod("bye", handler);
 
   let tr1 = new TransportServer({ emitter, inTopic: 'fromClient2', outTopic: 'toClient2' });
+  server.addTransport(tr1); // add a transport manually
 
-  server.addTransport(tr1);
-
-  server.run();
-
+  server.run(); // Start server
+  
   /* Test 1 */
   let connected = await clients.client2.ping();
   if (connected) {
@@ -40,7 +44,7 @@ async function main() {
     console.log("Not connected");
   }
 
-  const response2 = await clients.client2.call("greet");
+  const response2 = await clients.client2.call("bye");
   console.log(response2);
 }
 
