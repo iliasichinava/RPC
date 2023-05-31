@@ -31,6 +31,8 @@ async function main() {
   rcpServer.expose("greet", greet);
   rcpServer.expose("bye", bye);
 
+  await rcpServer.run();
+
   // server.registerMethod("greet", handler);
   // server.registerMethod("bye", handler);
 
