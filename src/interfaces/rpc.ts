@@ -26,5 +26,5 @@ export interface JSONRPCHandler {
 export interface Transport {
     delete(): unknown;
     onData(callback: (data: string) => void): void;
-    send(data: string): Promise<void>;
+    send(data: string): Promise<JSONRPCResponse>;
 }
