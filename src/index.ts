@@ -1,33 +1,41 @@
-import { EventEmitter } from 'events';
-import { JSONRPCHandler, Transport } from './interfaces/rpc';
-import { RPCServer } from './classes/server';
-import { RPCClient } from './classes/client';
+import { EventEmitter } from "events";
+import { JSONRPCHandler, Transport } from "./interfaces/rpc";
+import { TcpTransport } from "./classes/server/transports/tcp.transport";
+import { RPCServer } from "./classes/server";
+import { RPCClient } from "./classes/client";
 
 async function main() {
+  const tcpServer = new TcpTransport(3000);
+
+  const rcpServer = new RPCServer(tcpServer);
+
   // const server = await prepareServer();
   // const clients = await prepareClients();
 
   /* Create and Run some test handlers */
 
-  const handler: JSONRPCHandler = {
+  const greet: JSONRPCHandler = {
     greet: async () => {
       console.log("-------------------------------------");
       console.log("Hello");
       return "Handler ended";
     },
-
+  };
+  const bye: JSONRPCHandler = {
     bye: async () => {
       console.log("-------------------------------------");
       console.log("Bye");
-      return "Handler ended"
-    }
-  }
-  
+      return "Handler ended";
+    },
+  };
+  rcpServer.expose("greet", greet);
+  rcpServer.expose("bye", bye);
+
   // server.registerMethod("greet", handler);
   // server.registerMethod("bye", handler);
 
   // server.run(); // Start server
-  
+
   /* Test 1 */
   // let connected = await clients.client2.ping();
   // if (connected) {
@@ -41,13 +49,9 @@ async function main() {
   // console.log(response2);
 }
 
-async function prepareServer(emitter: EventEmitter) {
-  
-}
+async function prepareServer(emitter: EventEmitter) {}
 
-async function prepareClients() {
-  
-}
+async function prepareClients() {}
 
 main()
   .then((res: any) => {
