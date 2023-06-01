@@ -1,35 +1,41 @@
-import { JSONRPCRequest, JSONRPCHandler, Transport, Mode } from "../../interfaces/rpc";
+import { JSONRPCResponse } from "src/interfaces/rpc.js";
+import {
+  JSONRPCRequest,
+  JSONRPCHandler,
+  ServerTransport,
+  Mode,
+} from "../../interfaces/rpc";
 import { Invoker } from "./commands";
 
 export class RPCServer {
   private invoker: Invoker; // Instance of the Invoker class for handling RPC method invocations
-  private transportsQueue: Transport[]; // Queue to hold the registered transports
+  private transportsQueue: ServerTransport[]; // Queue to hold the registered transports
 
   /* PUBLIC METHODS */
 
-  public constructor(transports: Transport);
-  public constructor(transports: Transport[]);
-  public constructor(transports: Transport | Transport[]) {
+  public constructor(transports: ServerTransport);
+  public constructor(transports: ServerTransport[]);
+  public constructor(transports: ServerTransport | ServerTransport[]) {
     this.invoker = new Invoker(new Map<string, JSONRPCHandler>());
-    this.transportsQueue = Array.isArray(transports) ? transports : [transports];
+    this.transportsQueue = Array.isArray(transports)
+      ? transports
+      : [transports];
   }
 
   /* Main method for running the RPC server */
-  public run(): void {
+  public async run(): Promise<void> {
     this.registerPingMethod();
 
     for (const transport of this.transportsQueue) {
       console.info("Transport registered!");
-      this.addTransport(transport); // Add each transport to the server
+      this.addIncomeRequestHandlerToTransports(transport); // Add each transport to the server
+      await transport.start();
     }
-
-    this.transportsQueue = []; // Clear the transports queue
   }
 
   /* Method for registering an RPC method with a handler function */
-  public registerMethod(method: string, handler: JSONRPCHandler): void {
+  public expose(method: string, handler: JSONRPCHandler): void {
     this.invoker.register(method, handler);
-    console.log(`Method ${method} has been registered`);
   }
 
   /* Method for removing an RPC method */
@@ -41,26 +47,41 @@ export class RPCServer {
   }
 
   /* Method for adding a transport to the server */
-  public addTransport(transport: Transport): this {
-    console.log("New transport has been registered");
-    transport.onData(async (data: string) => {
-      const request: JSONRPCRequest = JSON.parse(data);
-      await this.handleRequest(transport, request);
-    });
+  private addIncomeRequestHandlerToTransports(
+    transport: ServerTransport
+  ): this {
+    transport.onData(this.handleIncomeRequest.bind(this));
+
     return this;
   }
 
+  public addNewTransport(transport: ServerTransport) {
+    this.transportsQueue.push(transport);
+  }
+
+  private async handleIncomeRequest(
+    data: string
+  ): Promise<JSONRPCResponse | void> {
+    const request: JSONRPCRequest = JSON.parse(data);
+    const dt = await this.handleRequest(request);
+    return dt;
+  }
+
   /* Method for removing a transport from the server */
-  public removeTransport(transport: Transport): void {
+  public removeTransport(transport: ServerTransport): void {
     transport.delete();
   }
 
   /* PRIVATE METHODS */
 
   /* Method for handling an RPC request */
-  private async handleRequest(transport: Transport, request: JSONRPCRequest): Promise<void> {
+  private async handleRequest(
+    request: JSONRPCRequest
+  ): Promise<JSONRPCResponse | void> {
     const response = await this.invoker.invoke(request);
-    if (request.mode !== Mode.Notify) await transport.send(JSON.stringify(response));
+    if (request.mode !== Mode.Notify) {
+      return response;
+    }
   }
 
   /* Method for registering the ping method */
@@ -68,9 +89,9 @@ export class RPCServer {
     const handler: JSONRPCHandler = {
       __ping__: async () => {
         return { status: 200 };
-      }
-    }
+      },
+    };
 
-    this.registerMethod("__ping__", handler);
+    this.expose("__ping__", handler);
   }
 }
