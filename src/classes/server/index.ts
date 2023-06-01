@@ -1,21 +1,21 @@
+import { JSONRPCResponse } from "src/interfaces/rpc.js";
 import {
   JSONRPCRequest,
   JSONRPCHandler,
-  Transport,
+  ServerTransport,
   Mode,
-  JSONRPCResponse,
 } from "../../interfaces/rpc";
 import { Invoker } from "./commands";
 
 export class RPCServer {
   private invoker: Invoker; // Instance of the Invoker class for handling RPC method invocations
-  private transportsQueue: Transport[]; // Queue to hold the registered transports
+  private transportsQueue: ServerTransport[]; // Queue to hold the registered transports
 
   /* PUBLIC METHODS */
 
-  public constructor(transports: Transport);
-  public constructor(transports: Transport[]);
-  public constructor(transports: Transport | Transport[]) {
+  public constructor(transports: ServerTransport);
+  public constructor(transports: ServerTransport[]);
+  public constructor(transports: ServerTransport | ServerTransport[]) {
     this.invoker = new Invoker(new Map<string, JSONRPCHandler>());
     this.transportsQueue = Array.isArray(transports)
       ? transports
@@ -36,7 +36,6 @@ export class RPCServer {
   /* Method for registering an RPC method with a handler function */
   public expose(method: string, handler: JSONRPCHandler): void {
     this.invoker.register(method, handler);
-    console.log(`Method ${method} has been registered`);
   }
 
   /* Method for removing an RPC method */
@@ -48,23 +47,28 @@ export class RPCServer {
   }
 
   /* Method for adding a transport to the server */
-  private addIncomeRequestHandlerToTransports(transport: Transport): this {
+  private addIncomeRequestHandlerToTransports(
+    transport: ServerTransport
+  ): this {
     transport.onData(this.handleIncomeRequest.bind(this));
 
     return this;
   }
 
-  public addNewTransport(transport: Transport) {
+  public addNewTransport(transport: ServerTransport) {
     this.transportsQueue.push(transport);
   }
 
-  private async handleIncomeRequest(data: string) {
+  private async handleIncomeRequest(
+    data: string
+  ): Promise<JSONRPCResponse | void> {
     const request: JSONRPCRequest = JSON.parse(data);
-    await this.handleRequest(request);
+    const dt = await this.handleRequest(request);
+    return dt;
   }
 
   /* Method for removing a transport from the server */
-  public removeTransport(transport: Transport): void {
+  public removeTransport(transport: ServerTransport): void {
     transport.delete();
   }
 
@@ -75,7 +79,9 @@ export class RPCServer {
     request: JSONRPCRequest
   ): Promise<JSONRPCResponse | void> {
     const response = await this.invoker.invoke(request);
-    if (request.mode !== Mode.Notify) return response;
+    if (request.mode !== Mode.Notify) {
+      return response;
+    }
   }
 
   /* Method for registering the ping method */

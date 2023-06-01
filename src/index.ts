@@ -1,7 +1,8 @@
 import { EventEmitter } from "events";
-import { JSONRPCHandler, Transport } from "./interfaces/rpc";
+import { JSONRPCHandler } from "./interfaces/rpc";
 import { TcpTransport } from "./classes/server/transports/tcp.transport";
 import { RPCServer } from "./classes/server";
+import { TcpTransportClient } from "./classes/client/transports/tcp.transport";
 import { RPCClient } from "./classes/client";
 
 async function main() {
@@ -33,6 +34,15 @@ async function main() {
 
   await rcpServer.run();
 
+  const tcpClient = new TcpTransportClient(3000);
+
+  const rcpServerClient = new RPCClient(tcpClient);
+
+  await rcpServerClient.start();
+  await rcpServerClient.call("bye");
+
+  rcpServerClient.call("greet");
+
   // server.registerMethod("greet", handler);
   // server.registerMethod("bye", handler);
 
@@ -50,10 +60,6 @@ async function main() {
   // const response2 = await clients.client2.call("bye");
   // console.log(response2);
 }
-
-async function prepareServer(emitter: EventEmitter) {}
-
-async function prepareClients() {}
 
 main()
   .then((res: any) => {

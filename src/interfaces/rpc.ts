@@ -27,8 +27,8 @@ export interface JSONRPCHandler {
   [methodName: string]: (...params: any[]) => Promise<any> | any;
 }
 
-export interface Transport {
+export interface ServerTransport {
   delete(): void;
-  onData(handler: Function);
+  onData(handler: Function): void;
   start(): Promise<void>;
 }
