@@ -27,7 +27,6 @@ export class RPCServer {
     this.registerPingMethod();
 
     for (const transport of this.transportsQueue) {
-      console.info("Transport registered!");
       this.addIncomeRequestHandlerToTransports(transport); // Add each transport to the server
       await transport.start();
     }
@@ -63,8 +62,7 @@ export class RPCServer {
     data: string
   ): Promise<JSONRPCResponse | void> {
     const request: JSONRPCRequest = JSON.parse(data);
-    const dt = await this.handleRequest(request);
-    return dt;
+    return await this.handleRequest(request);
   }
 
   /* Method for removing a transport from the server */
@@ -79,9 +77,7 @@ export class RPCServer {
     request: JSONRPCRequest
   ): Promise<JSONRPCResponse | void> {
     const response = await this.invoker.invoke(request);
-    if (request.mode !== Mode.Notify) {
-      return response;
-    }
+    return response;
   }
 
   /* Method for registering the ping method */

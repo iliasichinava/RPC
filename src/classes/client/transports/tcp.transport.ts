@@ -14,13 +14,25 @@ export class TcpTransportClient implements ClientTransport {
 
     this.port = port;
     this.clientServer = new net.Socket();
-
+    let buffer: string = "";
     this.clientServer.on("data", (data) => {
-      this.responseHander(data);
+      buffer += data.toString();
+      // Process complete JSON objects
+      while (buffer.includes("}")) {
+        const endIndex = buffer.indexOf("}") + 1;
+        const jsonString = buffer.substring(0, endIndex);
+        buffer = buffer.substring(endIndex);
+
+        try {
+          this.responseHander(jsonString);
+        } catch (error) {
+          console.error("Error parsing JSON:", error);
+        }
+      }
     });
   }
   async send(request: JSONRPCRequest): Promise<boolean> {
-    console.log(JSON.stringify(request), "[sending it from client]");
+    console.log(JSON.stringify(request), "[sending it from client] \n");
     return this.clientServer.write(JSON.stringify(request));
   }
 
@@ -38,6 +50,6 @@ export class TcpTransportClient implements ClientTransport {
     const promisifiedListen = promisify(this.clientServer.connect).bind(
       this.clientServer
     );
-    await promisifiedListen(this.port);
+    await promisifiedListen(this.port.toString());
   }
 }

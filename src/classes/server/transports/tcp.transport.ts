@@ -33,7 +33,7 @@ export class TcpTransport implements ServerTransport {
               return;
             }
 
-            socket.write(data.toString());
+            socket.write(JSON.stringify(data));
           } catch (error) {
             console.error("Error parsing JSON:", error);
           }

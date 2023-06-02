@@ -3,7 +3,6 @@ import { JSONRPCRequest, JSONRPCResponse, Mode } from "../../interfaces/rpc";
 
 export class RPCClient {
   private clientTransport: ClientTransport;
-
   public constructor(clietTransport: ClientTransport) {
     this.clientTransport = clietTransport;
   }
@@ -38,7 +37,7 @@ export class RPCClient {
   }
 
   /* Method for user to ping the RPC server */
-  public async ping(): Promise<boolean> {
+  public async ping(): Promise<void> {
     const request: JSONRPCRequest = {
       jsonrpc: "2.0",
       mode: Mode.Ping,
@@ -47,8 +46,9 @@ export class RPCClient {
     };
 
     // Send the ping request and check the response status
-    const response = await this.sendRequest(request);
-    return response && response.result && response.result.status === 200;
+    await this.sendRequest(request);
+
+    // return response && response.result && response.result.status === 200;
   }
 
   /* Method for deleting the clietTransport object */
@@ -73,13 +73,12 @@ export class RPCClient {
   }
 
   /* Method for sending an RPC request and receiving the response */
-  private async sendRequest(request: JSONRPCRequest): Promise<JSONRPCResponse> {
-    const res = await this.clientTransport.send(request);
-    return { result: "result", id: "ki", jsonrpc: "2.0" };
+  private async sendRequest(request: JSONRPCRequest): Promise<void> {
+    await this.clientTransport.send(request);
   }
 
   private responseHandler(response: string) {
-    console.log(response, "[client. response from server]");
+    console.log(JSON.parse(response), "[response from server] \n");
   }
   public async start() {
     this.clientTransport.setResponseHander(this.responseHandler.bind(this));
